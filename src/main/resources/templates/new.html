@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create User</title>
+</head>
+<body>
+
+<form th:method="POST" th:action="@{/admin/new}" th:object="${user}">
+
+    <table >
+        <tr>
+            <td><label> Enter name</label></td>
+            <td><input type = "text" th:field = "*{name}" id ="name" ></td>
+        </tr>
+        <tr>
+            <td><label> Enter surname</label></td>
+            <td><input type = "text" th:field = "*{surname}" id ="surname"></td>
+        </tr>
+        <tr>
+            <td><label for ="city"> Enter city</label></td>
+            <td><input type = "text" th:field = "*{city}" id ="city"></td>
+        </tr>
+        <tr>
+            <td><label for ="age"> Enter age</label></td>
+            <td><input type = "text" th:field = "*{age}" id ="age"></td>
+        </tr>
+        <tr>
+            <td><label for ="username"> Enter username</label></td>
+            <td><input type = "text" th:field = "*{username}" id ="username"></td>
+            <td th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Name Error</td>
+
+        </tr>
+        <tr>
+            <td><label for ="password"> Enter password</label></td>
+            <td><input type = "password" th:field = "*{password}" id ="password"></td>
+            <td th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Name Error</td>
+        </tr>
+        <tr>
+            <td><label for ="passwordConfirm"> Enter passwordConfirm</label></td>
+            <td> <input type = "password" th:field = "*{passwordConfirm}" id ="passwordConfirm"></td>
+            <p th:text="${errorpassword}"></p>
+        </tr>
+
+    </table>
+<!--    <select name="addRole" size="3" multiple>-->
+<!--        <option th:each="role : ${allRoles}"-->
+<!--                th:value="${role}" th:text="${role.name}"></option>-->
+<!--    </select>-->
+
+
+        <input  type="checkbox" name="addRole"
+                th:each="role : ${allRoles}"
+
+                th:value="${role}"
+
+                th:text="${role.name}"
+        />
+
+
+    <br/>
+    <br/>
+    <input  type="submit"  value="Create">
+    <br/>
+    <br/>
+</form>
+<form th:method="GET" th:action="@{/admin/view}">
+    <input  type="submit"  value="Back">
+</form>
+<br/>
+<form th:method="GET" th:action="@{/logout}">
+    <input  type="submit"  value="Exit">
+</form>
+</body>
+</html>
