@@ -4,6 +4,7 @@ import com.sazonov.springboot.task.springboot.model.Role;
 import com.sazonov.springboot.task.springboot.model.User;
 import com.sazonov.springboot.task.springboot.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,37 +26,36 @@ public class AdminController {
     public AdminController(UserService userService) {
         this.userService = userService;
     }
-
-    @GetMapping("/admin/view")
-    public String index(Model model) {
-        model.addAttribute("users", userService.index());
-        return "index";
-    }
-    @GetMapping("/admin/new")
-    public String newUser(Model model){
-        model.addAttribute("user", new User());
+    @GetMapping("/admin")
+    public String loadToUsersPage(Model model) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal() ;
+        model.addAttribute("userTable", userService.index());
+        model.addAttribute("newUser", new User());
         model.addAttribute("allRoles", userService.allRoles());
-        return "new";
+        model.addAttribute("sessionUser", user);
+        return "users";
     }
+//    @GetMapping("/admin/view")
+//    public String index(Model model) {
+//        model.addAttribute("users", userService.index());
+//        return "index";
+//    }
+//    @GetMapping("/admin/new")
+//    public String newUser(Model model){
+//        model.addAttribute("user", new User());
+//        model.addAttribute("allRoles", userService.allRoles());
+//        return "new";
+//    }
 
     @PostMapping("/admin/new")
+    public  String create (@ModelAttribute("user") User user,
+                           @RequestParam(value = "addRole", required = false) String userRole, Model model){
 
-    public  String create (@Valid @ModelAttribute("user") User user, BindingResult bindingResult,
-                           @RequestParam(value = "addRole", required = false) ArrayList<String> userRole, Model model){
-        if(!user.getPassword().equals(user.getPasswordConfirm())){
-            model.addAttribute("errorpassword", "passwords don't equals");
-            model.addAttribute("allRoles", userService.allRoles());
-            return "new";
-        }
-        if(bindingResult.hasErrors()){
-            model.addAttribute("allRoles", userService.allRoles());
-            return "new";
-        }
         Set<Role> roleSet = new HashSet<>();
         if(userRole == null){
             user.setRoles(Collections.singleton(new Role(2L,"ROLE_USER")));
             userService.create(user);
-            return "redirect:/admin/view";
+            return "redirect:/admin";
         }
         if (userRole.contains("ROLE_ADMIN")){
             roleSet.add(new Role(1L, "ADMIN"));
@@ -67,33 +67,20 @@ public class AdminController {
         }
         userService.create(user);
 
-        return "redirect:/admin/view";
+        return "redirect:/admin";
     }
 
-    @GetMapping("/admin/edit/{id}")
-    public String edit( @PathVariable(value = "id")  int id, Model model){
-        model.addAttribute("userEdit", userService.getUserById(id));
-        model.addAttribute("allRoles", userService.allRoles());
-        return "edit";
-    }
-    @PostMapping("/admin/edit")
-    public String update(@ModelAttribute(value = "userEdit") User userEdit,
-                         @RequestParam(value = "addRole", required = false) ArrayList<String> userRole, Model model){
-        if( userService.userExist(userEdit.getUsername())  &&
-                userEdit.getId() != userService.findByUserForUsername(userEdit.getUsername()).getId()) {
-            model.addAttribute("nameExists", "such username already exists");
-            return "edit";
-        }
+    @PutMapping("/admin/edit")
+    public  String update( @ModelAttribute("user") User userEdit,
+                           @RequestParam(value = "addRoles", required = false) String userRole,
+                           Model model){
 
-        if(!userEdit.getPassword().equals(userEdit.getPasswordConfirm())){
-            model.addAttribute("errorpassword", "passwords don't equals");
-            return "edit";
-        }
+
         Set<Role> roleSet = new HashSet<>();
-        if(userRole.isEmpty()){
+        if(userRole == null){
             userEdit.setRoles(Collections.singleton(new Role(2L,"ROLE_USER")));
             userService.create(userEdit);
-            return "redirect:/admin/view";
+            return "redirect:/admin";
         }
         if (userRole.contains("ROLE_ADMIN")){
             roleSet.add(new Role(1L, "ADMIN"));
@@ -105,18 +92,18 @@ public class AdminController {
         }
 
         userService.update(userEdit);
-        return "redirect:/admin/view";
+        return "redirect:/admin";
     }
 
 
-    @DeleteMapping("/admin/{id}")
+    @PostMapping("/admin/delete/{id}")
     public String delete(@PathVariable("id") int id){
         userService.delete(id);
-        return "redirect:/admin/view";
+        return "redirect:/admin";
     }
-//
-//    @GetMapping("/logout")
-//    public String logout() {
-//        return "login";
-//    }
+
+    @GetMapping("/logout")
+    public String logout() {
+        return "login";
+    }
 }
