@@ -33,10 +33,7 @@ public class RegController {
     }
     @PostMapping("/reg")
     public String regUser(@Valid @ModelAttribute("newUser") User user, BindingResult bindingResult,  Model model){
-        if(!user.getPassword().equals(user.getPasswordConfirm())){
-            model.addAttribute("errorpassword", "passwords don't equals");
-           return "reg";
-        }
+
         if(bindingResult.hasErrors()){
             return  "reg";
         }
@@ -44,8 +41,8 @@ public class RegController {
         userService.create(user);
         return "redirect:/login";
     }
-    @GetMapping("/login")
-    public String getLoginPage() {
-        return "login";
-    }
+//    @GetMapping("/login")
+//    public String getLoginPage() {
+//        return "login";
+//    }
 }

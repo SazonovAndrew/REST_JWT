@@ -35,8 +35,6 @@ public class User implements UserDetails {
    @Column(name = "password")
    @Size(min = 4, message = "Must be more than 4 symbols")
    private String password;
-   @Transient
-   private String passwordConfirm;
 
    @ManyToMany(fetch = FetchType.EAGER)
    @JoinTable(name = "users_roles",
@@ -96,13 +94,6 @@ public class User implements UserDetails {
       this.password = password;
    }
 
-   public String getPasswordConfirm() {
-      return passwordConfirm;
-   }
-
-   public void setPasswordConfirm(String passwordConfirm) {
-      this.passwordConfirm = passwordConfirm;
-   }
 
    @Override
    public String toString() {
