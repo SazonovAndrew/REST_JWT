@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 
 import java.util.List;
+import java.util.Set;
 
 public interface UserService extends UserDetailsService {
     User getUserById(int id);
@@ -20,6 +21,7 @@ public interface UserService extends UserDetailsService {
     Role findById(Integer id);
     void deleteRole(Integer id);
     Role saveRole(Role role);
-    @Override
     UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
+    List<String> mapToRoleName(Set<Role> roleList);
+
 }

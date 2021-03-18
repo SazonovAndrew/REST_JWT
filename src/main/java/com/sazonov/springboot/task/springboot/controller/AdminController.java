@@ -1,12 +1,19 @@
 package com.sazonov.springboot.task.springboot.controller;
 
+import com.sazonov.springboot.task.springboot.config.jwt.JwtTokenProvider;
+import com.sazonov.springboot.task.springboot.dto.AuthenticationRequestDto;
+import com.sazonov.springboot.task.springboot.dto.AuthenticationResponseDto;
 import com.sazonov.springboot.task.springboot.model.Role;
 import com.sazonov.springboot.task.springboot.model.User;
 import com.sazonov.springboot.task.springboot.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.ui.Model;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -15,12 +22,15 @@ import java.util.*;
 @RequestMapping("/api")
 public class AdminController {
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public AdminController(UserService userService) {
+    public AdminController(UserService userService, JwtTokenProvider jwtTokenProvider, AuthenticationManager authenticationManager) {
         this.userService = userService;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.authenticationManager = authenticationManager;
     }
-
 
     @GetMapping("/admin/roles")
     public List<Role> loadAllRoles() {
@@ -54,65 +64,24 @@ public class AdminController {
         userService.delete(id);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponseDto> login(@RequestBody AuthenticationRequestDto authenticationRequestDto ){
+        try {
+            String username = authenticationRequestDto.getUsername();
+           authenticationManager.authenticate(
+                   new UsernamePasswordAuthenticationToken(username, authenticationRequestDto.getPassword()));
+           User user = userService.findByUserForUsername(username);
+           if(user == null){
 
+               throw  new UsernameNotFoundException("Invalid username or password");
+           }
+           String token = jwtTokenProvider.createToken(username, user.getRoles());
 
-//    @PostMapping("/admin/new")
-//    public  String create (@ModelAttribute("user") User user,
-//                           @RequestParam(value = "addRole", required = false) String userRole, Model model){
-//
-//        Set<Role> roleSet = new HashSet<>();
-//        if(userRole == null){
-//            user.setRoles(Collections.singleton(new Role(2L,"ROLE_USER")));
-//            userService.create(user);
-//            return "redirect:/admin";
-//        }
-//        if (userRole.contains("ROLE_ADMIN")){
-//            roleSet.add(new Role(1L, "ADMIN"));
-//            user.setRoles(roleSet);
-//        }
-//        if (userRole.contains("ROLE_USER")) {
-//            roleSet.add(new Role(2L, "USER"));
-//            user.setRoles(roleSet);
-//        }
-//        userService.create(user);
-//
-//        return "redirect:/admin";
-//    }
-//
-//    @PutMapping("/admin/edit")
-//    public  String update( @ModelAttribute("user") User userEdit,
-//                           @RequestParam(value = "addRoles", required = false) String userRole,
-//                           Model model){
-//
-//
-//        Set<Role> roleSet = new HashSet<>();
-//        if(userRole == null){
-//            userEdit.setRoles(Collections.singleton(new Role(2L,"ROLE_USER")));
-//            userService.create(userEdit);
-//            return "redirect:/admin";
-//        }
-//        if (userRole.contains("ROLE_ADMIN")){
-//            roleSet.add(new Role(1L, "ADMIN"));
-//            userEdit.setRoles(roleSet);
-//        }
-//        if (userRole.contains("ROLE_USER")) {
-//            roleSet.add(new Role(2L, "USER"));
-//            userEdit.setRoles(roleSet);
-//        }
-//
-//        userService.update(userEdit);
-//        return "redirect:/admin";
-//    }
-//
-//
-//    @PostMapping("/admin/delete/{id}")
-//    public String delete(@PathVariable("id") int id){
-//        userService.delete(id);
-//        return "redirect:/admin";
-//    }
-//
-//    @GetMapping("/logout")
-//    public String logout() {
-//        return "login";
-//    }
+           return ResponseEntity.ok(new AuthenticationResponseDto(token, userService.mapToRoleName(user.getRoles())));
+
+        }catch (AuthenticationException e){
+            throw new BadCredentialsException("Invalid username or password");
+        }
+
+    }
 }

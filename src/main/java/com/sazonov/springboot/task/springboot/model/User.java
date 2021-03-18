@@ -23,10 +23,8 @@ public class User implements UserDetails {
    @Column(name = "surname")
    private String surname;
 
-
    @Column(name = "age")
    private int age;
-
 
    @Column(name = "username")
    @Size(min = 4, message = "Must be more than 4 symbols")
@@ -36,7 +34,7 @@ public class User implements UserDetails {
    @Size(min = 4, message = "Must be more than 4 symbols")
    private String password;
 
-   @ManyToMany(fetch = FetchType.EAGER)
+   @ManyToMany
    @JoinTable(name = "users_roles",
            joinColumns = @JoinColumn(name = "user_id"),
            inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -93,7 +91,6 @@ public class User implements UserDetails {
    public void setPassword(String password) {
       this.password = password;
    }
-
 
    @Override
    public String toString() {
